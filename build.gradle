@@ -19,6 +19,14 @@ allprojects {
     repositories {
         google()
         jcenter()
+        // bharatx repository - credentials in the global gradle.properties for security
+        maven {
+            url "https://repository.bharatx.tech/repository/maven-releases/"
+            credentials {
+                username project.property("repositoryUserUsername")
+                password project.property("repositoryUserPassword")
+            }
+        }
     }
 }
 

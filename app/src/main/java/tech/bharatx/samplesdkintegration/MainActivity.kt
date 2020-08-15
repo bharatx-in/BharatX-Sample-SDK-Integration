@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import tech.bharatx.common.BharatXCommonUtilManager
 import tech.bharatx.creditaccess.CreditAccessManager
 import tech.bharatx.startup.BharatXStartupTierManager
@@ -27,21 +28,23 @@ class MainActivity : AppCompatActivity() {
     // enable BharatX credit notifications
     CreditAccessManager.register(this@MainActivity)
 
-    // confirm whether user wants to go ahead with the transaction
-    BharatXCommonUtilManager.confirmTransactionWithUser(
-        this,
-        10000, // ask user for confirmation for 100 rupees
-        object : BharatXCommonUtilManager.TransactionConfirmationListener {
+    bharatx_pay_button.setOnClickListener {
+      // confirm whether user wants to go ahead with the transaction
+      BharatXCommonUtilManager.confirmTransactionWithUser(
+          this,
+          10000, // ask user for confirmation for 100 rupees
+          object : BharatXCommonUtilManager.TransactionConfirmationListener {
 
-          override fun onUserConfirmedTransaction() {
-            Toast.makeText(this@MainActivity, "Transaction confirmed", Toast.LENGTH_LONG).show()
-            startBharatXTransaction()
-          }
+            override fun onUserConfirmedTransaction() {
+              Toast.makeText(this@MainActivity, "Transaction confirmed", Toast.LENGTH_LONG).show()
+              startBharatXTransaction()
+            }
 
-          override fun onUserCancelledTransaction() {
-            Toast.makeText(this@MainActivity, "Transaction cancelled", Toast.LENGTH_LONG).show()
-          }
-        })
+            override fun onUserCancelledTransaction() {
+              Toast.makeText(this@MainActivity, "Transaction cancelled", Toast.LENGTH_LONG).show()
+            }
+          })
+    }
   }
 
   private fun startBharatXTransaction() {

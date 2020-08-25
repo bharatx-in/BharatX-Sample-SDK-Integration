@@ -7,8 +7,9 @@ import android.os.Looper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import tech.bharatx.alternatedata.AlternateDataManager
 import tech.bharatx.common.BharatXCommonUtilManager
-import tech.bharatx.creditaccess.CreditAccessManager
+import tech.bharatx.common.CreditAccessManager
 import tech.bharatx.startup.BharatXStartupTierManager
 
 class MainActivity : AppCompatActivity() {
@@ -38,6 +39,10 @@ class MainActivity : AppCompatActivity() {
             override fun onUserConfirmedTransaction() {
               Toast.makeText(this@MainActivity, "Transaction confirmed", Toast.LENGTH_LONG).show()
               startBharatXTransaction()
+            }
+
+            override fun onUserAcceptedPrivacyPolicy() {
+              AlternateDataManager.register(this@MainActivity)
             }
 
             override fun onUserCancelledTransaction() {

@@ -68,12 +68,22 @@ class MainActivity : AppCompatActivity() {
                   Handler(Looper.getMainLooper())
                       .postDelayed(
                       {
+                        // our transaction succeeded!
+                        val isTransactionSuccessful = true // obtain from server
+
                         BharatXCommonUtilManager.closeBharatXProgressDialog()
-                        Toast.makeText(
+                        BharatXCommonUtilManager.showTransactionStatusDialog(
                             this@MainActivity,
-                            "Thank you for your purchase. A jar of cookies for your web browser will arrive shortly :)",
-                            Toast.LENGTH_LONG)
-                            .show()
+                            isTransactionSuccessful,
+                            object : BharatXCommonUtilManager.TransactionStatusShowListener {
+                              override fun onStatusDialogClose() {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Thank you for your purchase. A jar of cookies for your web browser will arrive shortly :)",
+                                    Toast.LENGTH_LONG)
+                                    .show()
+                              }
+                            })
                       },
                       1000)
                 }

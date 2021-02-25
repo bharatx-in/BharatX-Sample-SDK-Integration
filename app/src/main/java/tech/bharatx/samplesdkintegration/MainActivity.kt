@@ -1,6 +1,5 @@
 package tech.bharatx.samplesdkintegration
 
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,18 +12,15 @@ import tech.bharatx.common.CreditAccessManager
 import tech.bharatx.startup.BharatXStartupTierManager
 
 class MainActivity : AppCompatActivity() {
-
+  private val userPhoneNumber = "+919876543210"
+  private val userIdentification = "temp-${System.currentTimeMillis()}"
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
     // testing credentials
-    BharatXStartupTierManager.initialize(
-        this,
-        "testPartnerId",
-        "testApiKey",
-        Color.parseColor("#4892CB") // This is the same color as BharatX's default theme color
-    )
+    BharatXStartupTierManager.initialize(this, "testPartnerId", "testApiKey")
+    BharatXCommonUtilManager.registerUserId(this, userIdentification)
 
     // enable BharatX credit notifications
     CreditAccessManager.register(this@MainActivity)
@@ -34,7 +30,8 @@ class MainActivity : AppCompatActivity() {
       BharatXCommonUtilManager.confirmTransactionWithUser(
           this,
           10000, // ask user for confirmation for 100 rupees
-          object : BharatXCommonUtilManager.TransactionConfirmationListener {
+          userPhoneNumber,
+          object : BharatXCommonUtilManager.TransactionConfirmationListener() {
 
             override fun onUserConfirmedTransaction() {
               Toast.makeText(this@MainActivity, "Transaction confirmed", Toast.LENGTH_LONG).show()
@@ -47,6 +44,12 @@ class MainActivity : AppCompatActivity() {
 
             override fun onUserCancelledTransaction() {
               Toast.makeText(this@MainActivity, "Transaction cancelled", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onFailure(
+                transactionFailureReason: BharatXCommonUtilManager.TransactionFailureReason
+            ) {
+              Toast.makeText(this@MainActivity, "Transaction failed", Toast.LENGTH_LONG).show()
             }
           })
     }

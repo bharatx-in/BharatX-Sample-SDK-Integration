@@ -1,99 +1,72 @@
 package tech.bharatx.samplesdkintegration
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import tech.bharatx.alternatedata.AlternateDataManager
-import tech.bharatx.common.BharatXCommonUtilManager
-import tech.bharatx.common.CreditAccessManager
-import tech.bharatx.startup.BharatXStartupTierManager
+import tech.bharatx.common.BharatXTransactionManager
+import tech.bharatx.common.BharatXUserManager
 
 class MainActivity : AppCompatActivity() {
-  private val userPhoneNumber = "+919876543210"
-  private val userIdentification = "temp-${System.currentTimeMillis()}"
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    // testing credentials
-    BharatXStartupTierManager.initialize(this, "testPartnerId", "testApiKey")
-    BharatXCommonUtilManager.registerUserId(this, userIdentification)
-
-    // enable BharatX credit notifications
-    CreditAccessManager.register(this@MainActivity)
+    BharatXUserManager(this)
+        .phoneNumber("+911234567890")
+        .id("user-${System.currentTimeMillis()}")
+        .name("Andrey Breslav")
+        .gender("Male")
+        .age(20)
+        .dob("2016-02-05", "yyyy-MM-dd")
+        .address("20, Tech Street, Bengaluru")
+        .prop("customKey1", "customValue1")
+        .register()
 
     bharatx_pay_button.setOnClickListener {
-      // confirm whether user wants to go ahead with the transaction
-      BharatXCommonUtilManager.confirmTransactionWithUser(
-          this,
-          10000, // ask user for confirmation for 100 rupees
-          userPhoneNumber,
-          object : BharatXCommonUtilManager.TransactionConfirmationListener() {
+      CookieStoreApis()
+          .initiateTransaction(
+          object : CookieStoreApis.ApiListener<String> {
+            override fun onComplete(res: String) {
+              // confirm whether user wants to go ahead with the transaction
+              BharatXTransactionManager.confirmTransactionWithUser(
+                  this@MainActivity,
+                  10000, // ask user for confirmation for 100 rupees
+                  res, // res is our transaction id
+                  object : BharatXTransactionManager.TransactionStatusListener() {
 
-            override fun onUserConfirmedTransaction() {
-              Toast.makeText(this@MainActivity, "Transaction confirmed", Toast.LENGTH_LONG).show()
-              startBharatXTransaction()
-            }
+                    override fun onSuccess() {
+                      Toast.makeText(
+                          this@MainActivity,
+                          "Thank you for your purchase. A jar of cookies for your web browser will arrive shortly :)",
+                          Toast.LENGTH_LONG)
+                          .show()
+                    }
 
-            override fun onUserAcceptedPrivacyPolicy() {
-              AlternateDataManager.register(this@MainActivity)
-            }
-
-            override fun onUserCancelledTransaction() {
-              Toast.makeText(this@MainActivity, "Transaction cancelled", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onFailure(
-                transactionFailureReason: BharatXCommonUtilManager.TransactionFailureReason
-            ) {
-              Toast.makeText(this@MainActivity, "Transaction failed", Toast.LENGTH_LONG).show()
+                    override fun onFailure(
+                        transactionFailureReason: BharatXTransactionManager.TransactionFailureReason
+                    ) {
+                      Toast.makeText(
+                          this@MainActivity,
+                          "Transaction failed due to ${transactionFailureReason.name}",
+                          Toast.LENGTH_LONG)
+                          .show()
+                    }
+                  })
             }
           })
     }
   }
 
-  private fun startBharatXTransaction() {
-    BharatXCommonUtilManager.showBharatXProgressDialog(this)
-    var transactionId = ""
-    Handler(Looper.getMainLooper())
-        .postDelayed(
-        {
-          transactionId = "123" // test transaction id - obtain from server
-          CreditAccessManager.registerTransactionId(
-              this,
-              transactionId,
-              object : CreditAccessManager.RegisterTransactionListener {
-                override fun onRegistered() {
-                  // simulate processing
-                  Handler(Looper.getMainLooper())
-                      .postDelayed(
-                      {
-                        // our transaction succeeded!
-                        val isTransactionSuccessful = true // obtain from server
+  // Merchant API call helper
+  class CookieStoreApis {
+    fun initiateTransaction(apiListener: ApiListener<String>) {
+      // initiate transaction in your server and get the transaction id
+      apiListener.onComplete("txn-${System.currentTimeMillis()}")
+    }
 
-                        BharatXCommonUtilManager.closeBharatXProgressDialog()
-                        BharatXCommonUtilManager.showTransactionStatusDialog(
-                            this@MainActivity,
-                            isTransactionSuccessful,
-                            object : BharatXCommonUtilManager.TransactionStatusShowListener {
-                              override fun onStatusDialogClose() {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "Thank you for your purchase. A jar of cookies for your web browser will arrive shortly :)",
-                                    Toast.LENGTH_LONG)
-                                    .show()
-                              }
-                            })
-                      },
-                      1000)
-                }
-
-                override fun onFailure() {}
-              })
-        },
-        2000)
+    interface ApiListener<T> {
+      fun onComplete(res: T)
+    }
   }
 }
